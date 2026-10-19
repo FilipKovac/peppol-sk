@@ -74,6 +74,9 @@ to build the solution.
 
 # News and noteworthy
 
+v0.2.3 - work in progress
+* Added the overload `isEveryRequiredFieldSet (ErrorList)` to `PeppolSKTDD100Builder` and to all sub-builders. It collects the reasons why a builder is incomplete in an `ErrorList` instead of only logging them, so that callers can pass them on
+
 v0.2.2 - 2026-09-23
 * The tax exemption reason (BT-120) and tax exemption reason code (BT-121) are no longer copied into the invoice line VAT information (BG-30) and into the document level allowance/charge (BG-20, BG-21), because the SK TDD rules `ibr-tdd-80` and `ibr-tdd-63` forbid them there.
   See [#4](https://github.com/phax/peppol-sk/issues/4) - thx @mariansbr

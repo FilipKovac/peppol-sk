@@ -31,6 +31,8 @@ import com.helger.base.numeric.mutable.MutableInt;
 import com.helger.base.string.StringHelper;
 import com.helger.collection.commons.CommonsArrayList;
 import com.helger.collection.commons.ICommonsList;
+import com.helger.diagnostics.error.SingleError;
+import com.helger.diagnostics.error.list.ErrorList;
 
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.CommodityClassificationType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.ItemType;
@@ -171,21 +173,20 @@ public class PeppolSKTDD100ItemBuilder implements IBuilder <ItemType>
     return classifiedTaxCategory (aBuilder);
   }
 
-  private boolean _isEveryRequiredFieldSet (final boolean bDoLogOnError, @NonNull final MutableInt aReportedDocsErrs)
+  private boolean _isEveryRequiredFieldSet (@NonNull final Consumer <String> aErrorHandler, @NonNull final MutableInt aReportedDocsErrs)
   {
-    final ConditionalLogger aCondLog = new ConditionalLogger (LOGGER, bDoLogOnError);
     final String sErrorPrefix = "Error in Peppol SK TDD 1.0.0 Item builder: ";
 
     // m_sDescription is optional
     if (StringHelper.isEmpty (m_sName))
     {
-      aCondLog.error (sErrorPrefix + "Name is missing");
+      aErrorHandler.accept (sErrorPrefix + "Name is missing");
       aReportedDocsErrs.inc ();
     }
     // m_aCommodityClassifications may be empty
     if (m_aClassifiedTaxCategory == null)
     {
-      aCondLog.error (sErrorPrefix + "ClassifiedTaxCategory is missing");
+      aErrorHandler.accept (sErrorPrefix + "ClassifiedTaxCategory is missing");
       aReportedDocsErrs.inc ();
     }
 
@@ -194,15 +195,22 @@ public class PeppolSKTDD100ItemBuilder implements IBuilder <ItemType>
 
   public boolean isEveryRequiredFieldSet (final boolean bDoLogOnError)
   {
+    final ConditionalLogger aCondLog = new ConditionalLogger (LOGGER, bDoLogOnError);
     final MutableInt aErrorCount = new MutableInt (0);
-    return _isEveryRequiredFieldSet (bDoLogOnError, aErrorCount);
+    return _isEveryRequiredFieldSet (sError -> aCondLog.error (sError), aErrorCount);
+  }
+
+  public boolean isEveryRequiredFieldSet (@NonNull final ErrorList aErrorList)
+  {
+    ValueEnforcer.notNull (aErrorList, "ErrorList");
+    final MutableInt aErrorCount = new MutableInt (0);
+    return _isEveryRequiredFieldSet (sError -> aErrorList.add (SingleError.builderError ().errorText (sError).build ()), aErrorCount);
   }
 
   @Nullable
   public ItemType build ()
   {
-    final MutableInt aErrorCount = new MutableInt (0);
-    if (!_isEveryRequiredFieldSet (true, aErrorCount))
+    if (!isEveryRequiredFieldSet (true))
     {
       LOGGER.error ("At least one mandatory field is not set and therefore the TDD Item cannot be build.");
       return null;

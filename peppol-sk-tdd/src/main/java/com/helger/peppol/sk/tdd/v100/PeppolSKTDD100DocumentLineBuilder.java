@@ -35,6 +35,8 @@ import com.helger.base.string.StringHelper;
 import com.helger.collection.commons.CommonsArrayList;
 import com.helger.collection.commons.ICommonsList;
 import com.helger.datetime.xml.XMLOffsetDate;
+import com.helger.diagnostics.error.SingleError;
+import com.helger.diagnostics.error.list.ErrorList;
 import com.helger.peppol.sk.tdd.v2026_04_14.DocumentLineType;
 
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.AllowanceChargeType;
@@ -398,30 +400,29 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
     return this;
   }
 
-  private boolean _isEveryRequiredFieldSet (final boolean bDoLogOnError, @NonNull final MutableInt aReportedDocsErrs)
+  private boolean _isEveryRequiredFieldSet (@NonNull final Consumer <String> aErrorHandler, @NonNull final MutableInt aReportedDocsErrs)
   {
-    final ConditionalLogger aCondLog = new ConditionalLogger (LOGGER, bDoLogOnError);
     final String sErrorPrefix = "Error in Peppol SK TDD 1.0.0 DocumentLine builder: ";
 
     if (StringHelper.isEmpty (m_sID))
     {
-      aCondLog.error (sErrorPrefix + "ID is missing");
+      aErrorHandler.accept (sErrorPrefix + "ID is missing");
       aReportedDocsErrs.inc ();
     }
     // m_sNote is optional
     if (m_aQuantity == null)
     {
-      aCondLog.error (sErrorPrefix + "Quantity is missing");
+      aErrorHandler.accept (sErrorPrefix + "Quantity is missing");
       aReportedDocsErrs.inc ();
     }
     if (StringHelper.isEmpty (m_sQuantityUnit))
     {
-      aCondLog.error (sErrorPrefix + "QuantityUnit is missing");
+      aErrorHandler.accept (sErrorPrefix + "QuantityUnit is missing");
       aReportedDocsErrs.inc ();
     }
     if (m_aLineExtensionAmount == null)
     {
-      aCondLog.error (sErrorPrefix + "LineExtensionAmount is missing");
+      aErrorHandler.accept (sErrorPrefix + "LineExtensionAmount is missing");
       aReportedDocsErrs.inc ();
     }
     // m_aInvoicePeriodStart is optional
@@ -430,12 +431,12 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
     // m_aAllowanceCharges may be empty
     if (m_aItem == null)
     {
-      aCondLog.error (sErrorPrefix + "Item is missing");
+      aErrorHandler.accept (sErrorPrefix + "Item is missing");
       aReportedDocsErrs.inc ();
     }
     if (m_aPriceAmount == null)
     {
-      aCondLog.error (sErrorPrefix + "PriceAmount is missing");
+      aErrorHandler.accept (sErrorPrefix + "PriceAmount is missing");
       aReportedDocsErrs.inc ();
     }
     // m_aPriceBaseQuantity is optional
@@ -445,15 +446,22 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
 
   public boolean isEveryRequiredFieldSet (final boolean bDoLogOnError)
   {
+    final ConditionalLogger aCondLog = new ConditionalLogger (LOGGER, bDoLogOnError);
     final MutableInt aErrorCount = new MutableInt (0);
-    return _isEveryRequiredFieldSet (bDoLogOnError, aErrorCount);
+    return _isEveryRequiredFieldSet (sError -> aCondLog.error (sError), aErrorCount);
+  }
+
+  public boolean isEveryRequiredFieldSet (@NonNull final ErrorList aErrorList)
+  {
+    ValueEnforcer.notNull (aErrorList, "ErrorList");
+    final MutableInt aErrorCount = new MutableInt (0);
+    return _isEveryRequiredFieldSet (sError -> aErrorList.add (SingleError.builderError ().errorText (sError).build ()), aErrorCount);
   }
 
   @Nullable
   public DocumentLineType build ()
   {
-    final MutableInt aErrorCount = new MutableInt (0);
-    if (!_isEveryRequiredFieldSet (true, aErrorCount))
+    if (!isEveryRequiredFieldSet (true))
     {
       LOGGER.error ("At least one mandatory field is not set and therefore the TDD DocumentLine cannot be build.");
       return null;
