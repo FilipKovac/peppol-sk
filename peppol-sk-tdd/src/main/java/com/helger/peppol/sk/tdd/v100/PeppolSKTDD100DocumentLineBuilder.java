@@ -28,15 +28,15 @@ import org.slf4j.LoggerFactory;
 import com.helger.annotation.style.ReturnsMutableObject;
 import com.helger.base.builder.IBuilder;
 import com.helger.base.enforce.ValueEnforcer;
-import com.helger.base.log.ConditionalLogger;
+import com.helger.base.log.ILogHandler;
 import com.helger.base.numeric.BigHelper;
 import com.helger.base.numeric.mutable.MutableInt;
 import com.helger.base.string.StringHelper;
 import com.helger.collection.commons.CommonsArrayList;
 import com.helger.collection.commons.ICommonsList;
 import com.helger.datetime.xml.XMLOffsetDate;
-import com.helger.diagnostics.error.SingleError;
 import com.helger.diagnostics.error.list.ErrorList;
+import com.helger.diagnostics.log.ErrorListLogHandler;
 import com.helger.peppol.sk.tdd.v2026_04_14.DocumentLineType;
 
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.AllowanceChargeType;
@@ -62,6 +62,7 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
 {
   private static final Logger LOGGER = LoggerFactory.getLogger (PeppolSKTDD100DocumentLineBuilder.class);
 
+  private ILogHandler m_aLogHandler = ILogHandler.createForLogger (LOGGER);
   private final String m_sDocumentCurrencyCode;
   private String m_sID;
   private String m_sNote;
@@ -331,6 +332,7 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
   public PeppolSKTDD100DocumentLineBuilder addAllowanceCharge (@NonNull final Consumer <? super PeppolSKTDD100AllowanceChargeBuilder> aBuilderConsumer)
   {
     final PeppolSKTDD100AllowanceChargeBuilder aBuilder = new PeppolSKTDD100AllowanceChargeBuilder (m_sDocumentCurrencyCode);
+    aBuilder.logHandler (m_aLogHandler);
     aBuilderConsumer.accept (aBuilder);
     return addAllowanceCharge (aBuilder);
   }
@@ -358,6 +360,7 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
   public PeppolSKTDD100DocumentLineBuilder item (@NonNull final Consumer <? super PeppolSKTDD100ItemBuilder> aBuilderConsumer)
   {
     final PeppolSKTDD100ItemBuilder aBuilder = new PeppolSKTDD100ItemBuilder ();
+    aBuilder.logHandler (m_aLogHandler);
     aBuilderConsumer.accept (aBuilder);
     return item (aBuilder);
   }
@@ -400,29 +403,62 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
     return this;
   }
 
-  private boolean _isEveryRequiredFieldSet (@NonNull final Consumer <String> aErrorHandler, @NonNull final MutableInt aReportedDocsErrs)
+  /**
+   * @return The log handler that receives the messages of the required field checks - errors for
+   *         missing or invalid fields. Never <code>null</code>.
+   */
+  @NonNull
+  public ILogHandler logHandler ()
+  {
+    return m_aLogHandler;
+  }
+
+  /**
+   * Set the log handler that receives the messages of the required field checks, when calling
+   * {@link #build()}. It is not used by
+   * {@link #isEveryRequiredFieldSet(ErrorList)}. Missing or invalid required fields are
+   * reported as errors. The default handler logs to the logger of this class, use
+   * {@link ILogHandler#createForConsumer(java.util.function.Consumer)} or
+   * {@link ILogHandler#createNoOp()} to redirect or discard them. The handler is passed on to all
+   * sub-builders that are created via a lambda <b>after</b> this call, so call this method before
+   * adding any sub-elements. Sub-builders that are created externally and passed in are not
+   * changed.
+   *
+   * @param aLogHandler
+   *        The log handler to use. May not be <code>null</code>.
+   * @return this for chaining
+   */
+  @NonNull
+  public PeppolSKTDD100DocumentLineBuilder logHandler (@NonNull final ILogHandler aLogHandler)
+  {
+    ValueEnforcer.notNull (aLogHandler, "LogHandler");
+    m_aLogHandler = aLogHandler;
+    return this;
+  }
+
+  private boolean _isEveryRequiredFieldSet (@NonNull final ILogHandler aLogHandler, @NonNull final MutableInt aReportedDocsErrs)
   {
     final String sErrorPrefix = "Error in Peppol SK TDD 1.0.0 DocumentLine builder: ";
 
     if (StringHelper.isEmpty (m_sID))
     {
-      aErrorHandler.accept (sErrorPrefix + "ID is missing");
+      aLogHandler.error (sErrorPrefix + "ID is missing");
       aReportedDocsErrs.inc ();
     }
     // m_sNote is optional
     if (m_aQuantity == null)
     {
-      aErrorHandler.accept (sErrorPrefix + "Quantity is missing");
+      aLogHandler.error (sErrorPrefix + "Quantity is missing");
       aReportedDocsErrs.inc ();
     }
     if (StringHelper.isEmpty (m_sQuantityUnit))
     {
-      aErrorHandler.accept (sErrorPrefix + "QuantityUnit is missing");
+      aLogHandler.error (sErrorPrefix + "QuantityUnit is missing");
       aReportedDocsErrs.inc ();
     }
     if (m_aLineExtensionAmount == null)
     {
-      aErrorHandler.accept (sErrorPrefix + "LineExtensionAmount is missing");
+      aLogHandler.error (sErrorPrefix + "LineExtensionAmount is missing");
       aReportedDocsErrs.inc ();
     }
     // m_aInvoicePeriodStart is optional
@@ -431,12 +467,12 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
     // m_aAllowanceCharges may be empty
     if (m_aItem == null)
     {
-      aErrorHandler.accept (sErrorPrefix + "Item is missing");
+      aLogHandler.error (sErrorPrefix + "Item is missing");
       aReportedDocsErrs.inc ();
     }
     if (m_aPriceAmount == null)
     {
-      aErrorHandler.accept (sErrorPrefix + "PriceAmount is missing");
+      aLogHandler.error (sErrorPrefix + "PriceAmount is missing");
       aReportedDocsErrs.inc ();
     }
     // m_aPriceBaseQuantity is optional
@@ -444,24 +480,18 @@ public class PeppolSKTDD100DocumentLineBuilder implements IBuilder <DocumentLine
     return aReportedDocsErrs.intValue () == 0;
   }
 
-  public boolean isEveryRequiredFieldSet (final boolean bDoLogOnError)
-  {
-    final ConditionalLogger aCondLog = new ConditionalLogger (LOGGER, bDoLogOnError);
-    final MutableInt aErrorCount = new MutableInt (0);
-    return _isEveryRequiredFieldSet (sError -> aCondLog.error (sError), aErrorCount);
-  }
-
   public boolean isEveryRequiredFieldSet (@NonNull final ErrorList aErrorList)
   {
     ValueEnforcer.notNull (aErrorList, "ErrorList");
     final MutableInt aErrorCount = new MutableInt (0);
-    return _isEveryRequiredFieldSet (sError -> aErrorList.add (SingleError.builderError ().errorText (sError).build ()), aErrorCount);
+    return _isEveryRequiredFieldSet (new ErrorListLogHandler (aErrorList), aErrorCount);
   }
 
   @Nullable
   public DocumentLineType build ()
   {
-    if (!isEveryRequiredFieldSet (true))
+    final MutableInt aErrorCount = new MutableInt (0);
+    if (!_isEveryRequiredFieldSet (m_aLogHandler, aErrorCount))
     {
       LOGGER.error ("At least one mandatory field is not set and therefore the TDD DocumentLine cannot be build.");
       return null;

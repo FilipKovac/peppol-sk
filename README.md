@@ -75,7 +75,10 @@ to build the solution.
 # News and noteworthy
 
 v0.2.3 - work in progress
-* Added the overload `isEveryRequiredFieldSet (ErrorList)` to `PeppolSKTDD100Builder` and to all sub-builders. It collects the reasons why a builder is incomplete in an `ErrorList` instead of only logging them, so that callers can pass them on
+* Updated to ph-commons 12.5.2
+* Added `logHandler (ILogHandler)` to `PeppolSKTDD100Builder` and all sub-builders. It receives the message of each missing or invalid required field (as error) when calling `build ()`; the default handler logs to the logger of the builder class. Use `ILogHandler.createForConsumer`, `ILogHandler.createForBiConsumer` or `ErrorListLogHandler` to redirect the messages, and `ILogHandler.createNoOp ()` to discard them. Call it first, because it is passed on to sub-builders created via lambda afterwards
+* Added `isEveryRequiredFieldSet (ErrorList)` which collects the messages in an `ErrorList`, independent of the log handler
+* Removed the public `isEveryRequiredFieldSet ()` and `isEveryRequiredFieldSet (boolean)` methods; use `isEveryRequiredFieldSet (ErrorList)` or `build ()` instead
 
 v0.2.2 - 2026-09-23
 * The tax exemption reason (BT-120) and tax exemption reason code (BT-121) are no longer copied into the invoice line VAT information (BG-30) and into the document level allowance/charge (BG-20, BG-21), because the SK TDD rules `ibr-tdd-80` and `ibr-tdd-63` forbid them there.

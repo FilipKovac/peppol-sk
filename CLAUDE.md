@@ -75,7 +75,7 @@ This codebase follows the [Helger framework](https://github.com/phax) convention
 
 - **Annotations:** `@NonNull`/`@Nullable` (JSpecify), `@Immutable` for thread-safe classes
 - **Preconditions:** `ValueEnforcer.notNull()` — not standard Java assertions
-- **Validation:** `_isEveryRequiredFieldSet()` (private check), `isEveryRequiredFieldSet()` (public)
+- **Validation:** `_isEveryRequiredFieldSet()` (private check), `isEveryRequiredFieldSet(ErrorList)` (public)
 - **Enums** implement `IHasID<String>` for serialization: `ESKTDDTaxDataTypeCode`, `ESKTDDDocumentScope`, `ESKTDDReporterRole`
 - **Resources:** `ClassPathResource` for schema/schematron files, accessed via static `_getCL()` method
 - **Logging:** `ConditionalLogger` for optional debug/error messages

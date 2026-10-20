@@ -26,13 +26,13 @@ import org.slf4j.LoggerFactory;
 import com.helger.annotation.style.ReturnsMutableObject;
 import com.helger.base.builder.IBuilder;
 import com.helger.base.enforce.ValueEnforcer;
-import com.helger.base.log.ConditionalLogger;
+import com.helger.base.log.ILogHandler;
 import com.helger.base.numeric.mutable.MutableInt;
 import com.helger.base.string.StringHelper;
 import com.helger.collection.commons.CommonsArrayList;
 import com.helger.collection.commons.ICommonsList;
-import com.helger.diagnostics.error.SingleError;
 import com.helger.diagnostics.error.list.ErrorList;
+import com.helger.diagnostics.log.ErrorListLogHandler;
 
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.CommodityClassificationType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.ItemType;
@@ -48,6 +48,7 @@ public class PeppolSKTDD100ItemBuilder implements IBuilder <ItemType>
 {
   private static final Logger LOGGER = LoggerFactory.getLogger (PeppolSKTDD100ItemBuilder.class);
 
+  private ILogHandler m_aLogHandler = ILogHandler.createForLogger (LOGGER);
   private String m_sDescription;
   private String m_sName;
   private final ICommonsList <CommodityClassificationType> m_aCommodityClassifications = new CommonsArrayList <> ();
@@ -142,6 +143,7 @@ public class PeppolSKTDD100ItemBuilder implements IBuilder <ItemType>
   public PeppolSKTDD100ItemBuilder addCommodityClassification (@NonNull final Consumer <? super PeppolSKTDD100CommodityClassificationBuilder> aBuilderConsumer)
   {
     final PeppolSKTDD100CommodityClassificationBuilder aBuilder = new PeppolSKTDD100CommodityClassificationBuilder ();
+    aBuilder.logHandler (m_aLogHandler);
     aBuilderConsumer.accept (aBuilder);
     return addCommodityClassification (aBuilder);
   }
@@ -169,48 +171,76 @@ public class PeppolSKTDD100ItemBuilder implements IBuilder <ItemType>
   public PeppolSKTDD100ItemBuilder classifiedTaxCategory (@NonNull final Consumer <? super PeppolSKTDD100TaxCategoryBuilder> aBuilderConsumer)
   {
     final PeppolSKTDD100TaxCategoryBuilder aBuilder = new PeppolSKTDD100TaxCategoryBuilder ();
+    aBuilder.logHandler (m_aLogHandler);
     aBuilderConsumer.accept (aBuilder);
     return classifiedTaxCategory (aBuilder);
   }
 
-  private boolean _isEveryRequiredFieldSet (@NonNull final Consumer <String> aErrorHandler, @NonNull final MutableInt aReportedDocsErrs)
+  /**
+   * @return The log handler that receives the messages of the required field checks - errors for
+   *         missing or invalid fields. Never <code>null</code>.
+   */
+  @NonNull
+  public ILogHandler logHandler ()
+  {
+    return m_aLogHandler;
+  }
+
+  /**
+   * Set the log handler that receives the messages of the required field checks, when calling
+   * {@link #build()}. It is not used by
+   * {@link #isEveryRequiredFieldSet(ErrorList)}. Missing or invalid required fields are
+   * reported as errors. The default handler logs to the logger of this class, use
+   * {@link ILogHandler#createForConsumer(java.util.function.Consumer)} or
+   * {@link ILogHandler#createNoOp()} to redirect or discard them. The handler is passed on to all
+   * sub-builders that are created via a lambda <b>after</b> this call, so call this method before
+   * adding any sub-elements. Sub-builders that are created externally and passed in are not
+   * changed.
+   *
+   * @param aLogHandler
+   *        The log handler to use. May not be <code>null</code>.
+   * @return this for chaining
+   */
+  @NonNull
+  public PeppolSKTDD100ItemBuilder logHandler (@NonNull final ILogHandler aLogHandler)
+  {
+    ValueEnforcer.notNull (aLogHandler, "LogHandler");
+    m_aLogHandler = aLogHandler;
+    return this;
+  }
+
+  private boolean _isEveryRequiredFieldSet (@NonNull final ILogHandler aLogHandler, @NonNull final MutableInt aReportedDocsErrs)
   {
     final String sErrorPrefix = "Error in Peppol SK TDD 1.0.0 Item builder: ";
 
     // m_sDescription is optional
     if (StringHelper.isEmpty (m_sName))
     {
-      aErrorHandler.accept (sErrorPrefix + "Name is missing");
+      aLogHandler.error (sErrorPrefix + "Name is missing");
       aReportedDocsErrs.inc ();
     }
     // m_aCommodityClassifications may be empty
     if (m_aClassifiedTaxCategory == null)
     {
-      aErrorHandler.accept (sErrorPrefix + "ClassifiedTaxCategory is missing");
+      aLogHandler.error (sErrorPrefix + "ClassifiedTaxCategory is missing");
       aReportedDocsErrs.inc ();
     }
 
     return aReportedDocsErrs.intValue () == 0;
   }
 
-  public boolean isEveryRequiredFieldSet (final boolean bDoLogOnError)
-  {
-    final ConditionalLogger aCondLog = new ConditionalLogger (LOGGER, bDoLogOnError);
-    final MutableInt aErrorCount = new MutableInt (0);
-    return _isEveryRequiredFieldSet (sError -> aCondLog.error (sError), aErrorCount);
-  }
-
   public boolean isEveryRequiredFieldSet (@NonNull final ErrorList aErrorList)
   {
     ValueEnforcer.notNull (aErrorList, "ErrorList");
     final MutableInt aErrorCount = new MutableInt (0);
-    return _isEveryRequiredFieldSet (sError -> aErrorList.add (SingleError.builderError ().errorText (sError).build ()), aErrorCount);
+    return _isEveryRequiredFieldSet (new ErrorListLogHandler (aErrorList), aErrorCount);
   }
 
   @Nullable
   public ItemType build ()
   {
-    if (!isEveryRequiredFieldSet (true))
+    final MutableInt aErrorCount = new MutableInt (0);
+    if (!_isEveryRequiredFieldSet (m_aLogHandler, aErrorCount))
     {
       LOGGER.error ("At least one mandatory field is not set and therefore the TDD Item cannot be build.");
       return null;
