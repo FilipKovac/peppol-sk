@@ -85,6 +85,7 @@ import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.Profile
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxCurrencyCodeType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxExclusiveAmountType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxInclusiveAmountType;
+import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxPointDateType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.UUIDType;
 import oasis.names.specification.ubl.schema.xsd.creditnote_21.CreditNoteType;
 import oasis.names.specification.ubl.schema.xsd.invoice_21.InvoiceType;
@@ -107,6 +108,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   private OffsetTime m_aIssueTime;
   private String m_sDocumentTypeCode;
   private String m_sNote;
+  private LocalDate m_aTaxPointDate;
   private String m_sDocumentCurrencyCode;
   private String m_sTaxCurrencyCode;
   private LocalDate m_aInvoicePeriodStart;
@@ -165,6 +167,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     documentTypeCode (aInv.getInvoiceTypeCodeValue ());
     if (aInv.hasNoteEntries ())
       note (aInv.getNoteAtIndex (0).getValue ());
+    taxPointDate (aInv.getTaxPointDateValueLocal ());
     documentCurrencyCode (aInv.getDocumentCurrencyCodeValue ());
     taxCurrencyCode (aInv.getTaxCurrencyCodeValue ());
 
@@ -326,6 +329,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     documentTypeCode (aCN.getCreditNoteTypeCodeValue ());
     if (aCN.hasNoteEntries ())
       note (aCN.getNoteAtIndex (0).getValue ());
+    taxPointDate (aCN.getTaxPointDateValueLocal ());
     documentCurrencyCode (aCN.getDocumentCurrencyCodeValue ());
     taxCurrencyCode (aCN.getTaxCurrencyCodeValue ());
 
@@ -570,6 +574,19 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   public PeppolSKTDD100ReportedTransactionBuilder note (@Nullable final String s)
   {
     m_sNote = s;
+    return this;
+  }
+
+  @Nullable
+  public LocalDate taxPointDate ()
+  {
+    return m_aTaxPointDate;
+  }
+
+  @NonNull
+  public PeppolSKTDD100ReportedTransactionBuilder taxPointDate (@Nullable final LocalDate a)
+  {
+    m_aTaxPointDate = a;
     return this;
   }
 
@@ -1350,6 +1367,8 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
         a.setDocumentTypeCode (m_sDocumentTypeCode);
       if (StringHelper.isNotEmpty (m_sNote))
         a.setNote (new NoteType (m_sNote));
+      if (m_aTaxPointDate != null)
+        a.setTaxPointDate (new TaxPointDateType (XMLOffsetDate.of (m_aTaxPointDate)));
       if (StringHelper.isNotEmpty (m_sDocumentCurrencyCode))
         a.setDocumentCurrencyCode (new DocumentCurrencyCodeType (m_sDocumentCurrencyCode));
       if (StringHelper.isNotEmpty (m_sTaxCurrencyCode))
