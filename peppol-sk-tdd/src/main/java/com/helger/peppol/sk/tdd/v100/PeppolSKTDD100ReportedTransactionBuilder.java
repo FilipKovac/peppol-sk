@@ -1181,7 +1181,8 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       aLogHandler.error (sErrorPrefix + "ProfileID is missing");
       aReportedDocsErrs.inc ();
     }
-    if (StringHelper.isEmpty (m_sID))
+    // Part of the UUID, so whitespace only is as good as missing
+    if (StringHelper.isEmptyAfterTrim (m_sID))
     {
       aLogHandler.error (sErrorPrefix + "ID is missing");
       aReportedDocsErrs.inc ();
@@ -1192,7 +1193,8 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       aReportedDocsErrs.inc ();
     }
     // IssueTime is optional
-    if (StringHelper.isEmpty (m_sDocumentTypeCode))
+    // Part of the UUID, so whitespace only is as good as missing
+    if (StringHelper.isEmptyAfterTrim (m_sDocumentTypeCode))
     {
       aLogHandler.error (sErrorPrefix + "DocumentTypeCode is missing");
       aReportedDocsErrs.inc ();
@@ -1208,12 +1210,13 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
 
     // m_aBillingReferences may be empty
 
-    if (StringHelper.isEmpty (m_sSellerEndpointIDSchemeID))
+    // Both Seller EndpointID parts are part of the UUID, so whitespace only is as good as missing
+    if (StringHelper.isEmptyAfterTrim (m_sSellerEndpointIDSchemeID))
     {
       aLogHandler.error (sErrorPrefix + "Seller EndpointID Scheme ID is missing");
       aReportedDocsErrs.inc ();
     }
-    if (StringHelper.isEmpty (m_sSellerEndpointID))
+    if (StringHelper.isEmptyAfterTrim (m_sSellerEndpointID))
     {
       aLogHandler.error (sErrorPrefix + "Seller EndpointID is missing");
       aReportedDocsErrs.inc ();
@@ -1289,9 +1292,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       aReportedDocsErrs.inc ();
     }
 
-    // Failed TDDs don't need this
-    // TODO missing in 1.0.0
-    // if (m_eDocumentTypeCode != ESKTDDDocumentTypeCode.DISREGARD)
+    // The ReportedDocument is mandatory for all TaxDataTypeCodes, including DISREGARD
     nErrs += aReportedDocsErrs.intValue ();
 
     return nErrs == 0;
@@ -1316,213 +1317,207 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
 
     final ReportedTransactionType ret = new ReportedTransactionType ();
 
-    // ReportedDocument - optional for FAILED state
-    if (m_eDocumentTypeCode != ESKTDDTaxDataTypeCode.DISREGARD || aErrorCount.is0 ())
+    // The ReportedDocument is created for all TaxDataTypeCodes
+    // The UUID is calculated based on rule ID-BDID-01: BT-34-1, BT-34, BT-3, BT-1
+    // and BT-2, each without leading and trailing whitespace. All of them are
+    // present, as checked above.
+    final UUID aRepDocUUID = UUID5Helper.fromUTF8 (CSKTDD.PEPPOL_SK_NAMESPACE,
+                                                   StringImplode.imploder ()
+                                                                .separator (' ')
+                                                                .source (StringHelper.trim (m_sSellerEndpointIDSchemeID),
+                                                                         StringHelper.trim (m_sSellerEndpointID),
+                                                                         StringHelper.trim (m_sDocumentTypeCode),
+                                                                         StringHelper.trim (m_sID),
+                                                                         DateTimeFormatter.ISO_LOCAL_DATE.format (m_aIssueDate))
+                                                                .build ());
+
+    final ReportedDocumentType a = new ReportedDocumentType ();
+    if (StringHelper.isNotEmpty (m_sCustomizationID))
+      a.setCustomizationID (new CustomizationIDType (m_sCustomizationID));
+    if (StringHelper.isNotEmpty (m_sProfileID))
+      a.setProfileID (new ProfileIDType (m_sProfileID));
+    a.setID (new IDType (m_sID));
+    a.setUUID (new UUIDType (aRepDocUUID.toString ()));
+    if (m_aIssueDate != null)
+      a.setIssueDate (new IssueDateType (XMLOffsetDate.of (m_aIssueDate)));
+    if (m_aIssueTime != null)
+      a.setIssueTime (new IssueTimeType (XMLOffsetTime.of (m_aIssueTime)));
+    if (StringHelper.isNotEmpty (m_sDocumentTypeCode))
+      a.setDocumentTypeCode (m_sDocumentTypeCode);
+    if (StringHelper.isNotEmpty (m_sNote))
+      a.setNote (new NoteType (m_sNote));
+    if (StringHelper.isNotEmpty (m_sDocumentCurrencyCode))
+      a.setDocumentCurrencyCode (new DocumentCurrencyCodeType (m_sDocumentCurrencyCode));
+    if (StringHelper.isNotEmpty (m_sTaxCurrencyCode))
+      a.setTaxCurrencyCode (new TaxCurrencyCodeType (m_sTaxCurrencyCode));
+
+    if (m_aInvoicePeriodStart != null ||
+        m_aInvoicePeriodEnd != null ||
+        StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
     {
-      // The UUID is calculated based on rule ID-BDID-01
-      final UUID aRepDocUUID = UUID5Helper.fromUTF8 (CSKTDD.PEPPOL_SK_NAMESPACE,
-                                                     StringImplode.imploder ()
-                                                                  .filterNonEmpty ()
-                                                                  .separator (' ')
-                                                                  .source (StringHelper.getNotNull (m_sSellerEndpointIDSchemeID,
-                                                                                                    ""),
-                                                                           StringHelper.getNotNull (m_sSellerEndpointID,
-                                                                                                    ""),
-                                                                           StringHelper.getNotNull (m_sDocumentTypeCode,
-                                                                                                    ""),
-                                                                           StringHelper.getNotNull (m_sID, ""),
-                                                                           m_aIssueDate == null ? ""
-                                                                                                : DateTimeFormatter.ISO_LOCAL_DATE.format (m_aIssueDate))
-                                                                  .build ());
+      final PeriodType aIP = new PeriodType ();
+      if (m_aInvoicePeriodStart != null)
+        aIP.setStartDate (XMLOffsetDate.of (m_aInvoicePeriodStart));
+      if (m_aInvoicePeriodEnd != null)
+        aIP.setEndDate (XMLOffsetDate.of (m_aInvoicePeriodEnd));
+      if (StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
+        aIP.addDescriptionCode (new DescriptionCodeType (m_sInvoicePeriodDescriptionCode));
+      a.setInvoicePeriod (aIP);
+    }
 
-      final ReportedDocumentType a = new ReportedDocumentType ();
-      if (StringHelper.isNotEmpty (m_sCustomizationID))
-        a.setCustomizationID (new CustomizationIDType (m_sCustomizationID));
-      if (StringHelper.isNotEmpty (m_sProfileID))
-        a.setProfileID (new ProfileIDType (m_sProfileID));
-      a.setID (new IDType (m_sID));
-      a.setUUID (new UUIDType (aRepDocUUID.toString ()));
-      if (m_aIssueDate != null)
-        a.setIssueDate (new IssueDateType (XMLOffsetDate.of (m_aIssueDate)));
-      if (m_aIssueTime != null)
-        a.setIssueTime (new IssueTimeType (XMLOffsetTime.of (m_aIssueTime)));
-      if (StringHelper.isNotEmpty (m_sDocumentTypeCode))
-        a.setDocumentTypeCode (m_sDocumentTypeCode);
-      if (StringHelper.isNotEmpty (m_sNote))
-        a.setNote (new NoteType (m_sNote));
-      if (StringHelper.isNotEmpty (m_sDocumentCurrencyCode))
-        a.setDocumentCurrencyCode (new DocumentCurrencyCodeType (m_sDocumentCurrencyCode));
-      if (StringHelper.isNotEmpty (m_sTaxCurrencyCode))
-        a.setTaxCurrencyCode (new TaxCurrencyCodeType (m_sTaxCurrencyCode));
+    a.setBillingReference (m_aBillingReferences);
 
-      if (m_aInvoicePeriodStart != null ||
-          m_aInvoicePeriodEnd != null ||
-          StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
+    {
+      final SupplierPartyType a2 = new SupplierPartyType ();
       {
-        final PeriodType aIP = new PeriodType ();
-        if (m_aInvoicePeriodStart != null)
-          aIP.setStartDate (XMLOffsetDate.of (m_aInvoicePeriodStart));
-        if (m_aInvoicePeriodEnd != null)
-          aIP.setEndDate (XMLOffsetDate.of (m_aInvoicePeriodEnd));
-        if (StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
-          aIP.addDescriptionCode (new DescriptionCodeType (m_sInvoicePeriodDescriptionCode));
-        a.setInvoicePeriod (aIP);
-      }
-
-      a.setBillingReference (m_aBillingReferences);
-
-      {
-        final SupplierPartyType a2 = new SupplierPartyType ();
+        final PartyType aParty = new PartyType ();
         {
-          final PartyType aParty = new PartyType ();
-          {
-            // SellerEndpointID does not go into the resulting TDD
-            if (StringHelper.isNotEmpty (m_sSellerTaxID))
-            {
-              final PartyTaxSchemeType aPTS = new PartyTaxSchemeType ();
-              aPTS.setCompanyID (m_sSellerTaxID);
-              final TaxSchemeType aTS = new TaxSchemeType ();
-              aTS.setID ("VAT");
-              aPTS.setTaxScheme (aTS);
-              aParty.addPartyTaxScheme (aPTS);
-            }
-
-            if (StringHelper.isNotEmpty (m_sSellerCountryCode))
-            {
-              final AddressType aPA = new AddressType ();
-              final CountryType aC = new CountryType ();
-              aC.setIdentificationCode (m_sSellerCountryCode);
-              aPA.setCountry (aC);
-              aParty.setPostalAddress (aPA);
-            }
-          }
-          // Party is required in AccountingSupplierParty
-          a2.setParty (aParty);
-        }
-        a.setAccountingSupplierParty (a2);
-      }
-
-      {
-        final CustomerPartyType aAccountingCustomer = new CustomerPartyType ();
-        {
-          final PartyType aParty = new PartyType ();
-          if (StringHelper.isNotEmpty (m_sBuyerCountryCode))
-          {
-            final AddressType aPA = new AddressType ();
-            final CountryType aC = new CountryType ();
-            aC.setIdentificationCode (m_sBuyerCountryCode);
-            aPA.setCountry (aC);
-            aParty.setPostalAddress (aPA);
-          }
-
-          if (StringHelper.isNotEmpty (m_sBuyerTaxID))
+          // SellerEndpointID does not go into the resulting TDD
+          if (StringHelper.isNotEmpty (m_sSellerTaxID))
           {
             final PartyTaxSchemeType aPTS = new PartyTaxSchemeType ();
-            aPTS.setCompanyID (m_sBuyerTaxID);
+            aPTS.setCompanyID (m_sSellerTaxID);
             final TaxSchemeType aTS = new TaxSchemeType ();
             aTS.setID ("VAT");
             aPTS.setTaxScheme (aTS);
             aParty.addPartyTaxScheme (aPTS);
           }
 
-          final PartyLegalEntityType aPLE = new PartyLegalEntityType ();
-          aPLE.setRegistrationName (m_sBuyerName);
-          aParty.addPartyLegalEntity (aPLE);
-
-          aAccountingCustomer.setParty (aParty);
+          if (StringHelper.isNotEmpty (m_sSellerCountryCode))
+          {
+            final AddressType aPA = new AddressType ();
+            final CountryType aC = new CountryType ();
+            aC.setIdentificationCode (m_sSellerCountryCode);
+            aPA.setCountry (aC);
+            aParty.setPostalAddress (aPA);
+          }
         }
-        a.setAccountingCustomerParty (aAccountingCustomer);
+        // Party is required in AccountingSupplierParty
+        a2.setParty (aParty);
       }
+      a.setAccountingSupplierParty (a2);
+    }
 
-      if (StringHelper.isNotEmpty (m_sTaxRepresentativeID) || StringHelper.isNotEmpty (m_sTaxRepresentativeCountryCode))
+    {
+      final CustomerPartyType aAccountingCustomer = new CustomerPartyType ();
       {
-        final PartyType aTaxRep = new PartyType ();
-        if (StringHelper.isNotEmpty (m_sTaxRepresentativeCountryCode))
+        final PartyType aParty = new PartyType ();
+        if (StringHelper.isNotEmpty (m_sBuyerCountryCode))
         {
           final AddressType aPA = new AddressType ();
           final CountryType aC = new CountryType ();
-          aC.setIdentificationCode (m_sTaxRepresentativeCountryCode);
+          aC.setIdentificationCode (m_sBuyerCountryCode);
           aPA.setCountry (aC);
-          aTaxRep.setPostalAddress (aPA);
+          aParty.setPostalAddress (aPA);
         }
 
-        if (StringHelper.isNotEmpty (m_sTaxRepresentativeID))
+        if (StringHelper.isNotEmpty (m_sBuyerTaxID))
         {
           final PartyTaxSchemeType aPTS = new PartyTaxSchemeType ();
-          aPTS.setCompanyID (m_sTaxRepresentativeID);
+          aPTS.setCompanyID (m_sBuyerTaxID);
           final TaxSchemeType aTS = new TaxSchemeType ();
           aTS.setID ("VAT");
           aPTS.setTaxScheme (aTS);
-          aTaxRep.addPartyTaxScheme (aPTS);
+          aParty.addPartyTaxScheme (aPTS);
         }
-        a.setTaxRepresentativeParty (aTaxRep);
+
+        final PartyLegalEntityType aPLE = new PartyLegalEntityType ();
+        aPLE.setRegistrationName (m_sBuyerName);
+        aParty.addPartyLegalEntity (aPLE);
+
+        aAccountingCustomer.setParty (aParty);
       }
-
-      if (m_aDeliveryDate != null)
-      {
-        final DeliveryType aDel = new DeliveryType ();
-        aDel.setActualDeliveryDate (XMLOffsetDate.of (m_aDeliveryDate));
-        a.setDelivery (aDel);
-      }
-
-      a.setAllowanceCharge (m_aAllowanceCharges);
-
-      a.addTaxTotal (m_aTaxTotalDocumentCurrency);
-      if (m_aTaxTotalTaxCurrency != null)
-        a.addTaxTotal (m_aTaxTotalTaxCurrency);
-
-      {
-        final MonetaryTotalType aMonetaryTotal = new MonetaryTotalType ();
-        {
-          final LineExtensionAmountType aAmount = new LineExtensionAmountType (m_aLineExtensionAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setLineExtensionAmount (aAmount);
-        }
-        {
-          final TaxExclusiveAmountType aAmount = new TaxExclusiveAmountType (m_aTaxExclusiveTotalAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setTaxExclusiveAmount (aAmount);
-        }
-        {
-          final TaxInclusiveAmountType aAmount = new TaxInclusiveAmountType (m_aTaxInclusiveTotalAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setTaxInclusiveAmount (aAmount);
-        }
-        if (m_aAllowanceTotalAmount != null)
-        {
-          final AllowanceTotalAmountType aAmount = new AllowanceTotalAmountType (m_aAllowanceTotalAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setAllowanceTotalAmount (aAmount);
-        }
-        if (m_aChargeTotalAmount != null)
-        {
-          final ChargeTotalAmountType aAmount = new ChargeTotalAmountType (m_aChargeTotalAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setChargeTotalAmount (aAmount);
-        }
-        if (m_aPrepaidAmount != null)
-        {
-          final PrepaidAmountType aAmount = new PrepaidAmountType (m_aPrepaidAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setPrepaidAmount (aAmount);
-        }
-        if (m_aPayableRoundingAmount != null)
-        {
-          final PayableRoundingAmountType aAmount = new PayableRoundingAmountType (m_aPayableRoundingAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setPayableRoundingAmount (aAmount);
-        }
-        {
-          final PayableAmountType aAmount = new PayableAmountType (m_aPayableAmount);
-          aAmount.setCurrencyID (m_sDocumentCurrencyCode);
-          aMonetaryTotal.setPayableAmount (aAmount);
-        }
-        a.setMonetaryTotal (aMonetaryTotal);
-      }
-      // Set all lines
-      a.setDocumentLine (m_aDocumentLines);
-      ret.setReportedDocument (a);
+      a.setAccountingCustomerParty (aAccountingCustomer);
     }
+
+    if (StringHelper.isNotEmpty (m_sTaxRepresentativeID) || StringHelper.isNotEmpty (m_sTaxRepresentativeCountryCode))
+    {
+      final PartyType aTaxRep = new PartyType ();
+      if (StringHelper.isNotEmpty (m_sTaxRepresentativeCountryCode))
+      {
+        final AddressType aPA = new AddressType ();
+        final CountryType aC = new CountryType ();
+        aC.setIdentificationCode (m_sTaxRepresentativeCountryCode);
+        aPA.setCountry (aC);
+        aTaxRep.setPostalAddress (aPA);
+      }
+
+      if (StringHelper.isNotEmpty (m_sTaxRepresentativeID))
+      {
+        final PartyTaxSchemeType aPTS = new PartyTaxSchemeType ();
+        aPTS.setCompanyID (m_sTaxRepresentativeID);
+        final TaxSchemeType aTS = new TaxSchemeType ();
+        aTS.setID ("VAT");
+        aPTS.setTaxScheme (aTS);
+        aTaxRep.addPartyTaxScheme (aPTS);
+      }
+      a.setTaxRepresentativeParty (aTaxRep);
+    }
+
+    if (m_aDeliveryDate != null)
+    {
+      final DeliveryType aDel = new DeliveryType ();
+      aDel.setActualDeliveryDate (XMLOffsetDate.of (m_aDeliveryDate));
+      a.setDelivery (aDel);
+    }
+
+    a.setAllowanceCharge (m_aAllowanceCharges);
+
+    a.addTaxTotal (m_aTaxTotalDocumentCurrency);
+    if (m_aTaxTotalTaxCurrency != null)
+      a.addTaxTotal (m_aTaxTotalTaxCurrency);
+
+    {
+      final MonetaryTotalType aMonetaryTotal = new MonetaryTotalType ();
+      {
+        final LineExtensionAmountType aAmount = new LineExtensionAmountType (m_aLineExtensionAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setLineExtensionAmount (aAmount);
+      }
+      {
+        final TaxExclusiveAmountType aAmount = new TaxExclusiveAmountType (m_aTaxExclusiveTotalAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setTaxExclusiveAmount (aAmount);
+      }
+      {
+        final TaxInclusiveAmountType aAmount = new TaxInclusiveAmountType (m_aTaxInclusiveTotalAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setTaxInclusiveAmount (aAmount);
+      }
+      if (m_aAllowanceTotalAmount != null)
+      {
+        final AllowanceTotalAmountType aAmount = new AllowanceTotalAmountType (m_aAllowanceTotalAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setAllowanceTotalAmount (aAmount);
+      }
+      if (m_aChargeTotalAmount != null)
+      {
+        final ChargeTotalAmountType aAmount = new ChargeTotalAmountType (m_aChargeTotalAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setChargeTotalAmount (aAmount);
+      }
+      if (m_aPrepaidAmount != null)
+      {
+        final PrepaidAmountType aAmount = new PrepaidAmountType (m_aPrepaidAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setPrepaidAmount (aAmount);
+      }
+      if (m_aPayableRoundingAmount != null)
+      {
+        final PayableRoundingAmountType aAmount = new PayableRoundingAmountType (m_aPayableRoundingAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setPayableRoundingAmount (aAmount);
+      }
+      {
+        final PayableAmountType aAmount = new PayableAmountType (m_aPayableAmount);
+        aAmount.setCurrencyID (m_sDocumentCurrencyCode);
+        aMonetaryTotal.setPayableAmount (aAmount);
+      }
+      a.setMonetaryTotal (aMonetaryTotal);
+    }
+    // Set all lines
+    a.setDocumentLine (m_aDocumentLines);
+    ret.setReportedDocument (a);
 
     return ret;
   }
