@@ -146,6 +146,27 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   }
 
   /**
+   * Get the company ID of the first cac:PartyTaxScheme of the provided party,
+   * that has the TaxScheme ID "VAT". Other tax schemes (e.g. BT-32 - Seller tax
+   * registration identifier) must not be used as VAT identifier.
+   *
+   * @param aParty
+   *        The party to search in. May not be <code>null</code>.
+   * @return <code>null</code> if no such party tax scheme exists.
+   */
+  @Nullable
+  private static String _getVATCompanyID (@NonNull final PartyType aParty)
+  {
+    for (final PartyTaxSchemeType aPTS : aParty.getPartyTaxScheme ())
+    {
+      final TaxSchemeType aTS = aPTS.getTaxScheme ();
+      if (aTS != null && "VAT".equals (aTS.getIDValue ()))
+        return aPTS.getCompanyIDValue ();
+    }
+    return null;
+  }
+
+  /**
    * Set all fields from the provided UBL 2.1 Invoice
    *
    * @param aInv
@@ -199,11 +220,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
           sellerEndpointID (aEndpoint.getValue ());
         }
 
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          sellerTaxID (aPTS.getCompanyIDValue ());
-        }
+        sellerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -217,11 +234,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       final PartyType aParty = aCustomer.getParty ();
       if (aParty != null)
       {
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          buyerTaxID (aPTS.getCompanyIDValue ());
-        }
+        buyerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -242,11 +255,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     final PartyType aTaxRep = aInv.getTaxRepresentativeParty ();
     if (aTaxRep != null)
     {
-      if (aTaxRep.hasPartyTaxSchemeEntries ())
-      {
-        final PartyTaxSchemeType aPTS = aTaxRep.getPartyTaxSchemeAtIndex (0);
-        taxRepresentativeID (aPTS.getCompanyIDValue ());
-      }
+      taxRepresentativeID (_getVATCompanyID (aTaxRep));
 
       final AddressType aPA = aTaxRep.getPostalAddress ();
       if (aPA != null && aPA.getCountry () != null)
@@ -360,11 +369,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
           sellerEndpointID (aEndpoint.getValue ());
         }
 
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          sellerTaxID (aPTS.getCompanyIDValue ());
-        }
+        sellerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -378,11 +383,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       final PartyType aParty = aCustomer.getParty ();
       if (aParty != null)
       {
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          buyerTaxID (aPTS.getCompanyIDValue ());
-        }
+        buyerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -403,11 +404,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     final PartyType aTaxRep = aCN.getTaxRepresentativeParty ();
     if (aTaxRep != null)
     {
-      if (aTaxRep.hasPartyTaxSchemeEntries ())
-      {
-        final PartyTaxSchemeType aPTS = aTaxRep.getPartyTaxSchemeAtIndex (0);
-        taxRepresentativeID (aPTS.getCompanyIDValue ());
-      }
+      taxRepresentativeID (_getVATCompanyID (aTaxRep));
 
       final AddressType aPA = aTaxRep.getPostalAddress ();
       if (aPA != null && aPA.getCountry () != null)
