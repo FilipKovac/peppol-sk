@@ -1465,6 +1465,8 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
         a.setDelivery (aDel);
       }
 
+      a.setPaymentMeans (m_aPaymentMeans);
+
       a.setAllowanceCharge (m_aAllowanceCharges);
 
       a.addTaxTotal (m_aTaxTotalDocumentCurrency);
