@@ -74,9 +74,12 @@ to build the solution.
 
 # News and noteworthy
 
-v0.2.3 - work in progress
-* Updated to ph-commons 12.5.2
-* Added `logHandler (ILogHandler)` to `PeppolSKTDD100Builder` and all sub-builders. It receives the message of each missing or invalid required field (as error) when calling `build ()`; the default handler logs to the logger of the builder class. Use `ILogHandler.createForConsumer`, `ILogHandler.createForBiConsumer` or `ErrorListLogHandler` to redirect the messages, and `ILogHandler.createNoOp ()` to discard them. Call it first, because it is passed on to sub-builders created via lambda afterwards
+v0.9.0 - 2026-10-22
+* Requires ph-commons 12.5.2
+* Added `logHandler (ILogHandler)` to `PeppolSKTDD100Builder` and all sub-builders.
+  It receives the message of each missing or invalid required field (as error) when calling `build ()`; the default handler logs to the logger of the builder class.
+  Use `ILogHandler.createForConsumer`, `ILogHandler.createForBiConsumer` or `ErrorListLogHandler` to redirect the messages, and `ILogHandler.createNoOp ()` to discard them.
+  Call it first, because it is passed on to sub-builders created via lambda afterwards
 * Added `isEveryRequiredFieldSet (ErrorList)` which collects the messages in an `ErrorList`, independent of the log handler
 * Removed the public `isEveryRequiredFieldSet ()` and `isEveryRequiredFieldSet (boolean)` methods; use `isEveryRequiredFieldSet (ErrorList)` or `build ()` instead
 
