@@ -65,6 +65,7 @@ public final class PeppolSKTestFiles
                     "sk-invoice-period-description-code.xml",
                     "sk-tax-point-date.xml",
                     "sk-tax-scheme-order.xml",
+                    "sk-uuid-inputs.xml",
                     "vat-category-AE.xml",
                     "vat-category-E.xml",
                     "vat-category-O.xml",

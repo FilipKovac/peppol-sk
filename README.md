@@ -96,6 +96,9 @@ v0.9.1 - work in progress
 * Added `paymentMandateID (String)` and `payerFinancialAccountID (String)` to `PeppolSKTDD100PaymentMeansBuilder`.
   The direct debit information (BG-19 with BT-89 and BT-91) of an Invoice or CreditNote is now taken over into `cac:PaymentMeans/cac:PaymentMandate`.
   See [#8](https://github.com/phax/peppol-sk/pull/8) - thx @FilipKovac
+* `PeppolSKTDD100ReportedTransactionBuilder` now removes leading and trailing whitespace from the five values used for the `ReportedDocument/cbc:UUID` calculation (rule `ID-BDID-01`).
+  A value that is empty after trimming is now treated as missing, so `build ()` returns `null` instead of creating a deviating UUID.
+  See [#9](https://github.com/phax/peppol-sk/pull/9) - thx @FilipKovac
 
 v0.9.0 - 2026-10-22
 * Requires ph-commons 12.5.2

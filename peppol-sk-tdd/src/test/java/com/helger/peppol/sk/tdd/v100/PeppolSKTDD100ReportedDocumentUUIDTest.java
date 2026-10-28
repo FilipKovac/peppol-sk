@@ -96,6 +96,14 @@ public final class PeppolSKTDD100ReportedDocumentUUIDTest
                                                                                            rt -> rt.sellerEndpointID ("\t"),
                                                                                            rt -> rt.documentTypeCode (" "),
                                                                                            rt -> rt.id ("\n"),
+                                                                                           rt -> rt.sellerEndpointIDSchemeID (""),
+                                                                                           rt -> rt.sellerEndpointID (""),
+                                                                                           rt -> rt.documentTypeCode (""),
+                                                                                           rt -> rt.id (""),
+                                                                                           rt -> rt.sellerEndpointIDSchemeID (null),
+                                                                                           rt -> rt.sellerEndpointID (null),
+                                                                                           rt -> rt.documentTypeCode (null),
+                                                                                           rt -> rt.id (null),
                                                                                            rt -> rt.issueDate ((LocalDate) null));
     for (final Consumer <PeppolSKTDD100ReportedTransactionBuilder> aModifier : aModifiers)
     {

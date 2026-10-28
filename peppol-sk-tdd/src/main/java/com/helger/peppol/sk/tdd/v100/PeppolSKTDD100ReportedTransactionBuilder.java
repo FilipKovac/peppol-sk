@@ -1360,6 +1360,8 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       a.setDocumentTypeCode (m_sDocumentTypeCode);
     if (StringHelper.isNotEmpty (m_sNote))
       a.setNote (new NoteType (m_sNote));
+    if (m_aTaxPointDate != null)
+      a.setTaxPointDate (new TaxPointDateType (XMLOffsetDate.of (m_aTaxPointDate)));
     if (StringHelper.isNotEmpty (m_sDocumentCurrencyCode))
       a.setDocumentCurrencyCode (new DocumentCurrencyCodeType (m_sDocumentCurrencyCode));
     if (StringHelper.isNotEmpty (m_sTaxCurrencyCode))
@@ -1369,57 +1371,15 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
         m_aInvoicePeriodEnd != null ||
         StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
     {
-      // The UUID is calculated based on rule ID-BDID-01
-      final UUID aRepDocUUID = UUID5Helper.fromUTF8 (CSKTDD.PEPPOL_SK_NAMESPACE,
-                                                     StringImplode.imploder ()
-                                                                  .filterNonEmpty ()
-                                                                  .separator (' ')
-                                                                  .source (StringHelper.getNotNull (m_sSellerEndpointIDSchemeID,
-                                                                                                    ""),
-                                                                           StringHelper.getNotNull (m_sSellerEndpointID,
-                                                                                                    ""),
-                                                                           StringHelper.getNotNull (m_sDocumentTypeCode,
-                                                                                                    ""),
-                                                                           StringHelper.getNotNull (m_sID, ""),
-                                                                           m_aIssueDate == null ? ""
-                                                                                                : DateTimeFormatter.ISO_LOCAL_DATE.format (m_aIssueDate))
-                                                                  .build ());
-
-      final ReportedDocumentType a = new ReportedDocumentType ();
-      if (StringHelper.isNotEmpty (m_sCustomizationID))
-        a.setCustomizationID (new CustomizationIDType (m_sCustomizationID));
-      if (StringHelper.isNotEmpty (m_sProfileID))
-        a.setProfileID (new ProfileIDType (m_sProfileID));
-      a.setID (new IDType (m_sID));
-      a.setUUID (new UUIDType (aRepDocUUID.toString ()));
-      if (m_aIssueDate != null)
-        a.setIssueDate (new IssueDateType (XMLOffsetDate.of (m_aIssueDate)));
-      if (m_aIssueTime != null)
-        a.setIssueTime (new IssueTimeType (XMLOffsetTime.of (m_aIssueTime)));
-      if (StringHelper.isNotEmpty (m_sDocumentTypeCode))
-        a.setDocumentTypeCode (m_sDocumentTypeCode);
-      if (StringHelper.isNotEmpty (m_sNote))
-        a.setNote (new NoteType (m_sNote));
-      if (m_aTaxPointDate != null)
-        a.setTaxPointDate (new TaxPointDateType (XMLOffsetDate.of (m_aTaxPointDate)));
-      if (StringHelper.isNotEmpty (m_sDocumentCurrencyCode))
-        a.setDocumentCurrencyCode (new DocumentCurrencyCodeType (m_sDocumentCurrencyCode));
-      if (StringHelper.isNotEmpty (m_sTaxCurrencyCode))
-        a.setTaxCurrencyCode (new TaxCurrencyCodeType (m_sTaxCurrencyCode));
-
-      if (m_aInvoicePeriodStart != null ||
-          m_aInvoicePeriodEnd != null ||
-          StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
-      {
-        final PeriodType aIP = new PeriodType ();
-        if (m_aInvoicePeriodStart != null)
-          aIP.setStartDate (XMLOffsetDate.of (m_aInvoicePeriodStart));
-        if (m_aInvoicePeriodEnd != null)
-          aIP.setEndDate (XMLOffsetDate.of (m_aInvoicePeriodEnd));
-        if (StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
-          aIP.addDescriptionCode (new DescriptionCodeType (m_sInvoicePeriodDescriptionCode));
-        a.setInvoicePeriod (aIP);
-      }
+      final PeriodType aIP = new PeriodType ();
+      if (m_aInvoicePeriodStart != null)
+        aIP.setStartDate (XMLOffsetDate.of (m_aInvoicePeriodStart));
+      if (m_aInvoicePeriodEnd != null)
+        aIP.setEndDate (XMLOffsetDate.of (m_aInvoicePeriodEnd));
+      if (StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
+        aIP.addDescriptionCode (new DescriptionCodeType (m_sInvoicePeriodDescriptionCode));
+      a.setInvoicePeriod (aIP);
+    }
 
     a.setBillingReference (m_aBillingReferences);
 
@@ -1516,6 +1476,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       aDel.setActualDeliveryDate (XMLOffsetDate.of (m_aDeliveryDate));
       a.setDelivery (aDel);
     }
+
     a.setPaymentMeans (m_aPaymentMeans);
 
     a.setAllowanceCharge (m_aAllowanceCharges);

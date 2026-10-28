@@ -9,6 +9,7 @@
     <cbc:DueDate>2026-06-17</cbc:DueDate>
     <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
     <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>SK-UUID-REF</cbc:BuyerReference>
     <cac:AccountingSupplierParty>
         <cac:Party>
             <cbc:EndpointID schemeID="0245">2020000001</cbc:EndpointID>
