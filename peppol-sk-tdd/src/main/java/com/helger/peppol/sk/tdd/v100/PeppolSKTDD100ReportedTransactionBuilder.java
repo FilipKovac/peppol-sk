@@ -177,7 +177,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       invoicePeriodStart (aIP.getStartDateValueLocal ());
       invoicePeriodEnd (aIP.getEndDateValueLocal ());
       if (aIP.hasDescriptionCodeEntries ())
-        invoicePeriodDescriptionCode (aIP.getDescriptionAtIndex (0).getValue ());
+        invoicePeriodDescriptionCode (aIP.getDescriptionCodeAtIndex (0).getValue ());
     }
 
     for (final var aBR : aInv.getBillingReference ())
@@ -339,7 +339,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       invoicePeriodStart (aIP.getStartDateValueLocal ());
       invoicePeriodEnd (aIP.getEndDateValueLocal ());
       if (aIP.hasDescriptionCodeEntries ())
-        invoicePeriodDescriptionCode (aIP.getDescriptionAtIndex (0).getValue ());
+        invoicePeriodDescriptionCode (aIP.getDescriptionCodeAtIndex (0).getValue ());
     }
 
     for (final var aBR : aCN.getBillingReference ())
