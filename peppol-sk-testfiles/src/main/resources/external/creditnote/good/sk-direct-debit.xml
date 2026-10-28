@@ -8,6 +8,7 @@
     <cbc:IssueDate>2026-06-03</cbc:IssueDate>
     <cbc:CreditNoteTypeCode>381</cbc:CreditNoteTypeCode>
     <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>SK-DD-REF</cbc:BuyerReference>
     <cac:AccountingSupplierParty>
         <cac:Party>
             <cbc:EndpointID schemeID="0245">2020000001</cbc:EndpointID>

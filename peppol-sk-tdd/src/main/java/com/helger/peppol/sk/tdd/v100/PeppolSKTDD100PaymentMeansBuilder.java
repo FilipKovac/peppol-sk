@@ -289,7 +289,6 @@ public class PeppolSKTDD100PaymentMeansBuilder implements IBuilder <PaymentMeans
     return this;
   }
 
-
   /**
    * @return The log handler that receives the messages of the required field checks - errors for
    *         missing or invalid fields. Never <code>null</code>.
