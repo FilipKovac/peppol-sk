@@ -85,6 +85,7 @@ import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.Profile
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxCurrencyCodeType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxExclusiveAmountType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxInclusiveAmountType;
+import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TaxPointDateType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.UUIDType;
 import oasis.names.specification.ubl.schema.xsd.creditnote_21.CreditNoteType;
 import oasis.names.specification.ubl.schema.xsd.invoice_21.InvoiceType;
@@ -107,6 +108,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   private OffsetTime m_aIssueTime;
   private String m_sDocumentTypeCode;
   private String m_sNote;
+  private LocalDate m_aTaxPointDate;
   private String m_sDocumentCurrencyCode;
   private String m_sTaxCurrencyCode;
   private LocalDate m_aInvoicePeriodStart;
@@ -146,6 +148,27 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   }
 
   /**
+   * Get the company ID of the first cac:PartyTaxScheme of the provided party,
+   * that has the TaxScheme ID "VAT". Other tax schemes (e.g. BT-32 - Seller tax
+   * registration identifier) must not be used as VAT identifier.
+   *
+   * @param aParty
+   *        The party to search in. May not be <code>null</code>.
+   * @return <code>null</code> if no such party tax scheme exists.
+   */
+  @Nullable
+  private static String _getVATCompanyID (@NonNull final PartyType aParty)
+  {
+    for (final PartyTaxSchemeType aPTS : aParty.getPartyTaxScheme ())
+    {
+      final TaxSchemeType aTS = aPTS.getTaxScheme ();
+      if (aTS != null && "VAT".equals (aTS.getIDValue ()))
+        return aPTS.getCompanyIDValue ();
+    }
+    return null;
+  }
+
+  /**
    * Set all fields from the provided UBL 2.1 Invoice
    *
    * @param aInv
@@ -165,6 +188,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     documentTypeCode (aInv.getInvoiceTypeCodeValue ());
     if (aInv.hasNoteEntries ())
       note (aInv.getNoteAtIndex (0).getValue ());
+    taxPointDate (aInv.getTaxPointDateValueLocal ());
     documentCurrencyCode (aInv.getDocumentCurrencyCodeValue ());
     taxCurrencyCode (aInv.getTaxCurrencyCodeValue ());
 
@@ -174,7 +198,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       invoicePeriodStart (aIP.getStartDateValueLocal ());
       invoicePeriodEnd (aIP.getEndDateValueLocal ());
       if (aIP.hasDescriptionCodeEntries ())
-        invoicePeriodDescriptionCode (aIP.getDescriptionAtIndex (0).getValue ());
+        invoicePeriodDescriptionCode (aIP.getDescriptionCodeAtIndex (0).getValue ());
     }
 
     for (final var aBR : aInv.getBillingReference ())
@@ -199,11 +223,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
           sellerEndpointID (aEndpoint.getValue ());
         }
 
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          sellerTaxID (aPTS.getCompanyIDValue ());
-        }
+        sellerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -217,11 +237,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       final PartyType aParty = aCustomer.getParty ();
       if (aParty != null)
       {
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          buyerTaxID (aPTS.getCompanyIDValue ());
-        }
+        buyerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -242,11 +258,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     final PartyType aTaxRep = aInv.getTaxRepresentativeParty ();
     if (aTaxRep != null)
     {
-      if (aTaxRep.hasPartyTaxSchemeEntries ())
-      {
-        final PartyTaxSchemeType aPTS = aTaxRep.getPartyTaxSchemeAtIndex (0);
-        taxRepresentativeID (aPTS.getCompanyIDValue ());
-      }
+      taxRepresentativeID (_getVATCompanyID (aTaxRep));
 
       final AddressType aPA = aTaxRep.getPostalAddress ();
       if (aPA != null && aPA.getCountry () != null)
@@ -326,6 +338,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     documentTypeCode (aCN.getCreditNoteTypeCodeValue ());
     if (aCN.hasNoteEntries ())
       note (aCN.getNoteAtIndex (0).getValue ());
+    taxPointDate (aCN.getTaxPointDateValueLocal ());
     documentCurrencyCode (aCN.getDocumentCurrencyCodeValue ());
     taxCurrencyCode (aCN.getTaxCurrencyCodeValue ());
 
@@ -335,7 +348,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       invoicePeriodStart (aIP.getStartDateValueLocal ());
       invoicePeriodEnd (aIP.getEndDateValueLocal ());
       if (aIP.hasDescriptionCodeEntries ())
-        invoicePeriodDescriptionCode (aIP.getDescriptionAtIndex (0).getValue ());
+        invoicePeriodDescriptionCode (aIP.getDescriptionCodeAtIndex (0).getValue ());
     }
 
     for (final var aBR : aCN.getBillingReference ())
@@ -360,11 +373,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
           sellerEndpointID (aEndpoint.getValue ());
         }
 
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          sellerTaxID (aPTS.getCompanyIDValue ());
-        }
+        sellerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -378,11 +387,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       final PartyType aParty = aCustomer.getParty ();
       if (aParty != null)
       {
-        if (aParty.hasPartyTaxSchemeEntries ())
-        {
-          final PartyTaxSchemeType aPTS = aParty.getPartyTaxSchemeAtIndex (0);
-          buyerTaxID (aPTS.getCompanyIDValue ());
-        }
+        buyerTaxID (_getVATCompanyID (aParty));
 
         final AddressType aPA = aParty.getPostalAddress ();
         if (aPA != null && aPA.getCountry () != null)
@@ -403,11 +408,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     final PartyType aTaxRep = aCN.getTaxRepresentativeParty ();
     if (aTaxRep != null)
     {
-      if (aTaxRep.hasPartyTaxSchemeEntries ())
-      {
-        final PartyTaxSchemeType aPTS = aTaxRep.getPartyTaxSchemeAtIndex (0);
-        taxRepresentativeID (aPTS.getCompanyIDValue ());
-      }
+      taxRepresentativeID (_getVATCompanyID (aTaxRep));
 
       final AddressType aPA = aTaxRep.getPostalAddress ();
       if (aPA != null && aPA.getCountry () != null)
@@ -570,6 +571,19 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   public PeppolSKTDD100ReportedTransactionBuilder note (@Nullable final String s)
   {
     m_sNote = s;
+    return this;
+  }
+
+  @Nullable
+  public LocalDate taxPointDate ()
+  {
+    return m_aTaxPointDate;
+  }
+
+  @NonNull
+  public PeppolSKTDD100ReportedTransactionBuilder taxPointDate (@Nullable final LocalDate a)
+  {
+    m_aTaxPointDate = a;
     return this;
   }
 
@@ -1355,15 +1369,57 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
         m_aInvoicePeriodEnd != null ||
         StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
     {
-      final PeriodType aIP = new PeriodType ();
-      if (m_aInvoicePeriodStart != null)
-        aIP.setStartDate (XMLOffsetDate.of (m_aInvoicePeriodStart));
-      if (m_aInvoicePeriodEnd != null)
-        aIP.setEndDate (XMLOffsetDate.of (m_aInvoicePeriodEnd));
-      if (StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
-        aIP.addDescriptionCode (new DescriptionCodeType (m_sInvoicePeriodDescriptionCode));
-      a.setInvoicePeriod (aIP);
-    }
+      // The UUID is calculated based on rule ID-BDID-01
+      final UUID aRepDocUUID = UUID5Helper.fromUTF8 (CSKTDD.PEPPOL_SK_NAMESPACE,
+                                                     StringImplode.imploder ()
+                                                                  .filterNonEmpty ()
+                                                                  .separator (' ')
+                                                                  .source (StringHelper.getNotNull (m_sSellerEndpointIDSchemeID,
+                                                                                                    ""),
+                                                                           StringHelper.getNotNull (m_sSellerEndpointID,
+                                                                                                    ""),
+                                                                           StringHelper.getNotNull (m_sDocumentTypeCode,
+                                                                                                    ""),
+                                                                           StringHelper.getNotNull (m_sID, ""),
+                                                                           m_aIssueDate == null ? ""
+                                                                                                : DateTimeFormatter.ISO_LOCAL_DATE.format (m_aIssueDate))
+                                                                  .build ());
+
+      final ReportedDocumentType a = new ReportedDocumentType ();
+      if (StringHelper.isNotEmpty (m_sCustomizationID))
+        a.setCustomizationID (new CustomizationIDType (m_sCustomizationID));
+      if (StringHelper.isNotEmpty (m_sProfileID))
+        a.setProfileID (new ProfileIDType (m_sProfileID));
+      a.setID (new IDType (m_sID));
+      a.setUUID (new UUIDType (aRepDocUUID.toString ()));
+      if (m_aIssueDate != null)
+        a.setIssueDate (new IssueDateType (XMLOffsetDate.of (m_aIssueDate)));
+      if (m_aIssueTime != null)
+        a.setIssueTime (new IssueTimeType (XMLOffsetTime.of (m_aIssueTime)));
+      if (StringHelper.isNotEmpty (m_sDocumentTypeCode))
+        a.setDocumentTypeCode (m_sDocumentTypeCode);
+      if (StringHelper.isNotEmpty (m_sNote))
+        a.setNote (new NoteType (m_sNote));
+      if (m_aTaxPointDate != null)
+        a.setTaxPointDate (new TaxPointDateType (XMLOffsetDate.of (m_aTaxPointDate)));
+      if (StringHelper.isNotEmpty (m_sDocumentCurrencyCode))
+        a.setDocumentCurrencyCode (new DocumentCurrencyCodeType (m_sDocumentCurrencyCode));
+      if (StringHelper.isNotEmpty (m_sTaxCurrencyCode))
+        a.setTaxCurrencyCode (new TaxCurrencyCodeType (m_sTaxCurrencyCode));
+
+      if (m_aInvoicePeriodStart != null ||
+          m_aInvoicePeriodEnd != null ||
+          StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
+      {
+        final PeriodType aIP = new PeriodType ();
+        if (m_aInvoicePeriodStart != null)
+          aIP.setStartDate (XMLOffsetDate.of (m_aInvoicePeriodStart));
+        if (m_aInvoicePeriodEnd != null)
+          aIP.setEndDate (XMLOffsetDate.of (m_aInvoicePeriodEnd));
+        if (StringHelper.isNotEmpty (m_sInvoicePeriodDescriptionCode))
+          aIP.addDescriptionCode (new DescriptionCodeType (m_sInvoicePeriodDescriptionCode));
+        a.setInvoicePeriod (aIP);
+      }
 
     a.setBillingReference (m_aBillingReferences);
 
@@ -1460,6 +1516,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       aDel.setActualDeliveryDate (XMLOffsetDate.of (m_aDeliveryDate));
       a.setDelivery (aDel);
     }
+    a.setPaymentMeans (m_aPaymentMeans);
 
     a.setAllowanceCharge (m_aAllowanceCharges);
 

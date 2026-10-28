@@ -33,6 +33,7 @@ import com.helger.diagnostics.log.ErrorListLogHandler;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.BranchType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.CardAccountType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.FinancialAccountType;
+import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.PaymentMandateType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.PaymentMeansType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.IDType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.PaymentIDType;
@@ -58,7 +59,8 @@ public class PeppolSKTDD100PaymentMeansBuilder implements IBuilder <PaymentMeans
   private String m_sPayeeFinancialAccountIDScheme;
   private String m_sPayeeFinancialInstitutionBranchID;
   private String m_sPayeeFinancialInstitutionBranchIDScheme;
-  // PaymentMandate has no type in 1.0.0
+  private String m_sPaymentMandateID;
+  private String m_sPayerFinancialAccountID;
 
   public PeppolSKTDD100PaymentMeansBuilder ()
   {}
@@ -112,6 +114,19 @@ public class PeppolSKTDD100PaymentMeansBuilder implements IBuilder <PaymentMeans
           payeeFinancialInstitutionBranchID (aID.getValue ());
           payeeFinancialInstitutionBranchIDScheme (aID.getSchemeID ());
         }
+      }
+    }
+
+    final PaymentMandateType aPM = aObj.getPaymentMandate ();
+    if (aPM != null)
+    {
+      // BT-89
+      paymentMandateID (aPM.getIDValue ());
+      final FinancialAccountType aPayerFA = aPM.getPayerFinancialAccount ();
+      if (aPayerFA != null)
+      {
+        // BT-91
+        payerFinancialAccountID (aPayerFA.getIDValue ());
       }
     }
 
@@ -248,6 +263,32 @@ public class PeppolSKTDD100PaymentMeansBuilder implements IBuilder <PaymentMeans
     return this;
   }
 
+  @Nullable
+  public String paymentMandateID ()
+  {
+    return m_sPaymentMandateID;
+  }
+
+  @NonNull
+  public PeppolSKTDD100PaymentMeansBuilder paymentMandateID (@Nullable final String s)
+  {
+    m_sPaymentMandateID = s;
+    return this;
+  }
+
+  @Nullable
+  public String payerFinancialAccountID ()
+  {
+    return m_sPayerFinancialAccountID;
+  }
+
+  @NonNull
+  public PeppolSKTDD100PaymentMeansBuilder payerFinancialAccountID (@Nullable final String s)
+  {
+    m_sPayerFinancialAccountID = s;
+    return this;
+  }
+
   /**
    * @return The log handler that receives the messages of the required field checks - errors for
    *         missing or invalid fields. Never <code>null</code>.
@@ -299,6 +340,8 @@ public class PeppolSKTDD100PaymentMeansBuilder implements IBuilder <PaymentMeans
     // m_sPayeeFinancialAccountIDScheme is optional
     // m_sPayeeFinancialInstitutionBranchID is optional
     // m_sPayeeFinancialInstitutionBranchIDScheme is optional
+    // m_sPaymentMandateID is optional
+    // m_sPayerFinancialAccountID is optional
 
     return aReportedDocsErrs.intValue () == 0;
   }
@@ -348,6 +391,19 @@ public class PeppolSKTDD100PaymentMeansBuilder implements IBuilder <PaymentMeans
         aPFA.setFinancialInstitutionBranch (aFIB);
       }
       ret.setPayeeFinancialAccount (aPFA);
+    }
+    if (StringHelper.isNotEmpty (m_sPaymentMandateID) || StringHelper.isNotEmpty (m_sPayerFinancialAccountID))
+    {
+      final PaymentMandateType aPM = new PaymentMandateType ();
+      if (StringHelper.isNotEmpty (m_sPaymentMandateID))
+        aPM.setID (m_sPaymentMandateID);
+      if (StringHelper.isNotEmpty (m_sPayerFinancialAccountID))
+      {
+        final FinancialAccountType aPayerFA = new FinancialAccountType ();
+        aPayerFA.setID (m_sPayerFinancialAccountID);
+        aPM.setPayerFinancialAccount (aPayerFA);
+      }
+      ret.setPaymentMandate (aPM);
     }
     return ret;
   }

@@ -79,6 +79,24 @@ to build the solution.
 
 # News and noteworthy
 
+v0.9.1 - work in progress
+* Requires ph-commons 12.5.3
+* Added `taxPointDate (LocalDate)` to `PeppolSKTDD100ReportedTransactionBuilder`.
+  The value added tax point date (BT-7) of an Invoice or CreditNote is now taken over into `ReportedDocument/cbc:TaxPointDate`.
+  See [#5](https://github.com/phax/peppol-sk/pull/5) - thx @FilipKovac
+* Fixed an `IndexOutOfBoundsException` in `PeppolSKTDD100ReportedTransactionBuilder.initFromInvoice` and `initFromCreditNote` if the invoice period contains a tax point date code (BT-8).
+  The value is now correctly taken over into `ReportedDocument/cac:InvoicePeriod/cbc:DescriptionCode`.
+  See [#6](https://github.com/phax/peppol-sk/pull/6) - thx @FilipKovac
+* `PeppolSKTDD100ReportedTransactionBuilder.initFromInvoice` and `initFromCreditNote` now take the VAT identifiers (BT-31, BT-48, BT-63) from the `cac:PartyTaxScheme` with `TaxScheme/ID` `VAT`, instead of always using the first one.
+  Previously a Seller tax registration identifier (BT-32) listed first was reported as VAT identifier. A party without a `VAT` tax scheme now has no VAT identifier.
+  See [#7](https://github.com/phax/peppol-sk/pull/7) - thx @FilipKovac
+* Fixed `PeppolSKTDD100ReportedTransactionBuilder.build ()` to write the payment instructions (BG-16) to the TDD.
+  Previously the `cac:PaymentMeans` elements were collected but never emitted, so no TDD contained them.
+  See [#8](https://github.com/phax/peppol-sk/pull/8) - thx @FilipKovac
+* Added `paymentMandateID (String)` and `payerFinancialAccountID (String)` to `PeppolSKTDD100PaymentMeansBuilder`.
+  The direct debit information (BG-19 with BT-89 and BT-91) of an Invoice or CreditNote is now taken over into `cac:PaymentMeans/cac:PaymentMandate`.
+  See [#8](https://github.com/phax/peppol-sk/pull/8) - thx @FilipKovac
+
 v0.9.0 - 2026-10-22
 * Requires ph-commons 12.5.2
 * Added `logHandler (ILogHandler)` to `PeppolSKTDD100Builder` and all sub-builders.
