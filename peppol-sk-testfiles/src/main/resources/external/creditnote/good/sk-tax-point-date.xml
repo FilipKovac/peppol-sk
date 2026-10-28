@@ -9,6 +9,7 @@
     <cbc:TaxPointDate>2026-05-31</cbc:TaxPointDate>
     <cbc:CreditNoteTypeCode>381</cbc:CreditNoteTypeCode>
     <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>SK-TPD-REF</cbc:BuyerReference>
     <cac:AccountingSupplierParty>
         <cac:Party>
             <cbc:EndpointID schemeID="0245">2020000001</cbc:EndpointID>
