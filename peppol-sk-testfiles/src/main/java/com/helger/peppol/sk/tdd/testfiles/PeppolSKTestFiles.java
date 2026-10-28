@@ -63,6 +63,7 @@ public final class PeppolSKTestFiles
                     "sales-order-example.xml",
                     "sk-invoice-period-description-code.xml",
                     "sk-tax-point-date.xml",
+                    "sk-tax-scheme-order.xml",
                     "vat-category-AE.xml",
                     "vat-category-E.xml",
                     "vat-category-O.xml",
@@ -78,7 +79,8 @@ public final class PeppolSKTestFiles
     return _getAll ("creditnote/good/",
                     "base-creditnote-correction.xml",
                     "sk-invoice-period-description-code.xml",
-                    "sk-tax-point-date.xml");
+                    "sk-tax-point-date.xml",
+                    "sk-tax-scheme-order.xml");
   }
 
   @NonNull

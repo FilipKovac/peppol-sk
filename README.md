@@ -82,6 +82,9 @@ v0.9.1 - work in progress
 * Fixed an `IndexOutOfBoundsException` in `PeppolSKTDD100ReportedTransactionBuilder.initFromInvoice` and `initFromCreditNote` if the invoice period contains a tax point date code (BT-8).
   The value is now correctly taken over into `ReportedDocument/cac:InvoicePeriod/cbc:DescriptionCode`.
   See [#6](https://github.com/phax/peppol-sk/pull/6) - thx @FilipKovac
+* `PeppolSKTDD100ReportedTransactionBuilder.initFromInvoice` and `initFromCreditNote` now take the VAT identifiers (BT-31, BT-48, BT-63) from the `cac:PartyTaxScheme` with `TaxScheme/ID` `VAT`, instead of always using the first one.
+  Previously a Seller tax registration identifier (BT-32) listed first was reported as VAT identifier. A party without a `VAT` tax scheme now has no VAT identifier.
+  See [#7](https://github.com/phax/peppol-sk/pull/7) - thx @FilipKovac
 
 v0.9.0 - 2026-10-22
 * Requires ph-commons 12.5.2

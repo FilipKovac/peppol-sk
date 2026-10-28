@@ -129,10 +129,11 @@ public final class PeppolSKTDD100VATPartyTaxSchemeTest
     final InvoiceType aInvoice = UBL21Marshaller.invoice ()
                                                 .read (new ClassPathResource ("external/invoice/good/sk-tax-scheme-order.xml"));
     assertNotNull (aInvoice);
-    // Only keep the non-VAT entries
+    // Only keep the non-VAT entry of the seller
     aInvoice.getAccountingSupplierParty ().getParty ().getPartyTaxScheme ().remove (1);
-    aInvoice.getAccountingCustomerParty ().getParty ().getPartyTaxScheme ().remove (1);
-    aInvoice.getTaxRepresentativeParty ().getPartyTaxScheme ().remove (1);
+    // Buyer and tax representative only have a VAT entry - change it to non-VAT
+    aInvoice.getAccountingCustomerParty ().getParty ().getPartyTaxSchemeAtIndex (0).getTaxScheme ().setID ("TAX");
+    aInvoice.getTaxRepresentativeParty ().getPartyTaxSchemeAtIndex (0).getTaxScheme ().setID ("TAX");
 
     final PeppolSKTDD100ReportedTransactionBuilder aRT = new PeppolSKTDD100ReportedTransactionBuilder (ESKTDDTaxDataTypeCode.SUBMIT).initFromInvoice (aInvoice);
     // The tax registration number must not be reported as VAT identifier
