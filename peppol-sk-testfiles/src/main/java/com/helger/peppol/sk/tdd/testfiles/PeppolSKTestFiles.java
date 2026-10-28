@@ -61,6 +61,7 @@ public final class PeppolSKTestFiles
                     "base-example.xml",
                     "base-negative-inv-correction.xml",
                     "sales-order-example.xml",
+                    "sk-invoice-period-description-code.xml",
                     "sk-tax-point-date.xml",
                     "vat-category-AE.xml",
                     "vat-category-E.xml",
@@ -74,7 +75,10 @@ public final class PeppolSKTestFiles
   @ReturnsMutableCopy
   public static ICommonsList <@NonNull ClassPathResource> getAllGoodBillingCreditNoteFiles ()
   {
-    return _getAll ("creditnote/good/", "base-creditnote-correction.xml", "sk-tax-point-date.xml");
+    return _getAll ("creditnote/good/",
+                    "base-creditnote-correction.xml",
+                    "sk-invoice-period-description-code.xml",
+                    "sk-tax-point-date.xml");
   }
 
   @NonNull

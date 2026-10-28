@@ -79,6 +79,9 @@ v0.9.1 - work in progress
 * Added `taxPointDate (LocalDate)` to `PeppolSKTDD100ReportedTransactionBuilder`.
   The value added tax point date (BT-7) of an Invoice or CreditNote is now taken over into `ReportedDocument/cbc:TaxPointDate`.
   See [#5](https://github.com/phax/peppol-sk/pull/5) - thx @FilipKovac
+* Fixed an `IndexOutOfBoundsException` in `PeppolSKTDD100ReportedTransactionBuilder.initFromInvoice` and `initFromCreditNote` if the invoice period contains a tax point date code (BT-8).
+  The value is now correctly taken over into `ReportedDocument/cac:InvoicePeriod/cbc:DescriptionCode`.
+  See [#6](https://github.com/phax/peppol-sk/pull/6) - thx @FilipKovac
 
 v0.9.0 - 2026-10-22
 * Requires ph-commons 12.5.2

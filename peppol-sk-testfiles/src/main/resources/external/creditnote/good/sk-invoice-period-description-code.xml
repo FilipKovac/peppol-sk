@@ -8,6 +8,7 @@
     <cbc:IssueDate>2026-06-03</cbc:IssueDate>
     <cbc:CreditNoteTypeCode>381</cbc:CreditNoteTypeCode>
     <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>SK-IPDC-REF</cbc:BuyerReference>
     <cac:InvoicePeriod>
         <cbc:StartDate>2026-05-01</cbc:StartDate>
         <cbc:EndDate>2026-05-31</cbc:EndDate>
