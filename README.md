@@ -63,6 +63,11 @@ String xml = new PeppolSKTDD100Marshaller ().setFormattedOutput (true).getAsStri
 ISchematronResource schematron = PeppolSKTDDValidator.getSchematronSK_TDD_100 ();
 ```
 
+The `ReportedDocument` is created for every `TaxDataTypeCode`, including `D` (DISREGARD), so all of its mandatory fields must be set.
+The `ReportedDocument/UUID` is calculated according to rule `ID-BDID-01` from BT-34-1, BT-34, BT-3, BT-1 and BT-2.
+Leading and trailing whitespace is removed from these values for the calculation, and `build()` returns `null` if one of them is missing or empty.
+All other values are copied as is.
+
 # Building
 
 This project requires Apache Maven 3.x and Java 17 for building.
