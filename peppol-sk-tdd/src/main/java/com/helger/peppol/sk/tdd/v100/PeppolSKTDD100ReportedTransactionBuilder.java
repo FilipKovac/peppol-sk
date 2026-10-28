@@ -148,9 +148,19 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   }
 
   /**
-   * Get the company ID of the first cac:PartyTaxScheme of the provided party,
-   * that has the TaxScheme ID "VAT". Other tax schemes (e.g. BT-32 - Seller tax
-   * registration identifier) must not be used as VAT identifier.
+   * @return The tax data type code from the constructor. Never <code>null</code>.
+   * @since 0.9.1
+   */
+  @NonNull
+  public final ESKTDDTaxDataTypeCode getDataTypeCode ()
+  {
+    return m_eDocumentTypeCode;
+  }
+
+  /**
+   * Get the company ID of the first cac:PartyTaxScheme of the provided party, that has the
+   * TaxScheme ID "VAT". Other tax schemes (e.g. BT-32 - Seller tax registration identifier) must
+   * not be used as VAT identifier.
    *
    * @param aParty
    *        The party to search in. May not be <code>null</code>.
@@ -1156,10 +1166,9 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
 
   /**
    * Set the log handler that receives the messages of the required field checks, when calling
-   * {@link #build()}. It is not used by
-   * {@link #isEveryRequiredFieldSet(ErrorList)}. Missing or invalid required fields are
-   * reported as errors. The default handler logs to the logger of this class, use
-   * {@link ILogHandler#createForConsumer(java.util.function.Consumer)} or
+   * {@link #build()}. It is not used by {@link #isEveryRequiredFieldSet(ErrorList)}. Missing or
+   * invalid required fields are reported as errors. The default handler logs to the logger of this
+   * class, use {@link ILogHandler#createForConsumer(java.util.function.Consumer)} or
    * {@link ILogHandler#createNoOp()} to redirect or discard them. The handler is passed on to all
    * sub-builders that are created via a lambda <b>after</b> this call, so call this method before
    * adding any sub-elements. Sub-builders that are created externally and passed in are not
@@ -1177,7 +1186,8 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     return this;
   }
 
-  private boolean _isEveryRequiredFieldSet (@NonNull final ILogHandler aLogHandler, @NonNull final MutableInt aReportedDocsErrs)
+  private boolean _isEveryRequiredFieldSet (@NonNull final ILogHandler aLogHandler,
+                                            @NonNull final MutableInt aReportedDocsErrs)
   {
     int nErrs = 0;
     final String sErrorPrefix = "Error in Peppol SK TDD 1.0.0 ReportedTransaction builder: ";
@@ -1196,7 +1206,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
       aReportedDocsErrs.inc ();
     }
     // Part of the UUID, so whitespace only is as good as missing
-    if (StringHelper.isEmptyAfterTrim (m_sID))
+    if (StringHelper.isBlank (m_sID))
     {
       aLogHandler.error (sErrorPrefix + "ID is missing");
       aReportedDocsErrs.inc ();
@@ -1208,7 +1218,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     }
     // IssueTime is optional
     // Part of the UUID, so whitespace only is as good as missing
-    if (StringHelper.isEmptyAfterTrim (m_sDocumentTypeCode))
+    if (StringHelper.isBlank (m_sDocumentTypeCode))
     {
       aLogHandler.error (sErrorPrefix + "DocumentTypeCode is missing");
       aReportedDocsErrs.inc ();
@@ -1225,12 +1235,12 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     // m_aBillingReferences may be empty
 
     // Both Seller EndpointID parts are part of the UUID, so whitespace only is as good as missing
-    if (StringHelper.isEmptyAfterTrim (m_sSellerEndpointIDSchemeID))
+    if (StringHelper.isBlank (m_sSellerEndpointIDSchemeID))
     {
       aLogHandler.error (sErrorPrefix + "Seller EndpointID Scheme ID is missing");
       aReportedDocsErrs.inc ();
     }
-    if (StringHelper.isEmptyAfterTrim (m_sSellerEndpointID))
+    if (StringHelper.isBlank (m_sSellerEndpointID))
     {
       aLogHandler.error (sErrorPrefix + "Seller EndpointID is missing");
       aReportedDocsErrs.inc ();
