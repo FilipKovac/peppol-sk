@@ -105,7 +105,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
   private String m_sProfileID;
   private String m_sID;
   private LocalDate m_aIssueDate;
-  private OffsetTime m_aIssueTime;
+  private XMLOffsetTime m_aIssueTime;
   private String m_sDocumentTypeCode;
   private String m_sNote;
   private LocalDate m_aTaxPointDate;
@@ -530,24 +530,36 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     return this;
   }
 
+  /**
+   * @return The issue time. A time without an offset is returned with UTC. May be
+   *         <code>null</code>.
+   */
   @Nullable
   public OffsetTime issueTime ()
   {
-    return m_aIssueTime;
+    return m_aIssueTime == null ? null : m_aIssueTime.toOffsetTime ();
   }
 
+  /**
+   * Set the issue time as given, e.g. from a UBL document. It is written to the TDD unchanged, so
+   * a time without an offset stays without an offset and all fractional digits are kept.
+   *
+   * @param a
+   *        The issue time to use. May be <code>null</code>.
+   * @return this for chaining
+   */
   @NonNull
   public PeppolSKTDD100ReportedTransactionBuilder issueTime (@Nullable final XMLOffsetTime a)
   {
-    return issueTime (a == null ? null : a.toOffsetTime ());
+    m_aIssueTime = a;
+    return this;
   }
 
   @NonNull
   public PeppolSKTDD100ReportedTransactionBuilder issueTime (@Nullable final OffsetTime a)
   {
     // XSD can only handle milliseconds
-    m_aIssueTime = PDTFactory.getWithMillisOnly (a);
-    return this;
+    return issueTime (a == null ? null : XMLOffsetTime.of (PDTFactory.getWithMillisOnly (a)));
   }
 
   @NonNull
@@ -1365,7 +1377,7 @@ public class PeppolSKTDD100ReportedTransactionBuilder implements IBuilder <Repor
     if (m_aIssueDate != null)
       a.setIssueDate (new IssueDateType (XMLOffsetDate.of (m_aIssueDate)));
     if (m_aIssueTime != null)
-      a.setIssueTime (new IssueTimeType (XMLOffsetTime.of (m_aIssueTime)));
+      a.setIssueTime (new IssueTimeType (m_aIssueTime));
     if (StringHelper.isNotEmpty (m_sDocumentTypeCode))
       a.setDocumentTypeCode (m_sDocumentTypeCode);
     if (StringHelper.isNotEmpty (m_sNote))
